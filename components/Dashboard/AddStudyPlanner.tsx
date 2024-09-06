@@ -1,5 +1,5 @@
 "use client";
-import React from "react";
+import React, { useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -10,7 +10,6 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Button } from "../ui/button";
 import {
   Form,
@@ -21,7 +20,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { string, z } from "zod";
+import { z } from "zod";
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -32,9 +31,10 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { format } from "date-fns";
-import { Calendar as CalendarIcon } from "lucide-react";
+import { Calendar as CalendarIcon, LoaderCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { InputTags } from "../ui/inputtags";
+import { useToast } from "@/hooks/use-toast"
 
 
 const formSchema = z.object({
@@ -44,7 +44,10 @@ const formSchema = z.object({
 });
 
 const AddStudyPlanner = () => {
-  
+  const [isOpen, setIsOpen] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const { toast } = useToast();
+
   // 1. Define your form.
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -59,25 +62,52 @@ const AddStudyPlanner = () => {
     // Do something with the form values.
     // ✅ This will be type-safe and validated.
     console.log(values);
-    try{
-      const res = await fetch("/api/addStudyPlan",{
-        method:"POST",
+    setIsLoading(true);
+    try {
+      const res = await fetch("/api/addStudyPlan", {
+        method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body:JSON.stringify(values)
-      })
-      if(!res.ok){
-        console.log('not submitted');
+        body: JSON.stringify(values),
+      });
+      if (!res.ok) {
+        console.log("not submitted");
+        toast({
+          title: "Failure to add study plan",
+          variant:"destructive"
+        })
+      }else{
+        const data = await res.json();
+        toast({
+          title: "Added Study Plan ✅",
+          description: `"${data?.studyPlan?.title}" added successfully ...`,
+        })
       }
-    }catch(err){
+    } catch (err) {
       console.log(err);
+      toast({
+        title: "Error occur to add study plan",
+        variant:"destructive"
+      })
+    } finally {
+      setIsLoading(false);
+      setIsOpen(false);
+      form.reset();
     }
   }
 
   return (
     <div>
-      <Dialog>
+      <Dialog
+        open={isOpen}
+        onOpenChange={(open) => {
+          setIsOpen(open);
+          if (!open) {
+            form.reset();
+          }
+        }}
+      >
         <DialogTrigger asChild>
           <Button variant="outline">Add Study Plan</Button>
         </DialogTrigger>
@@ -85,7 +115,8 @@ const AddStudyPlanner = () => {
           <DialogHeader>
             <DialogTitle>Add Study Plan</DialogTitle>
             <DialogDescription>
-              Make changes to your profile here. Click save when you&apos; re done.
+              Make changes to your profile here. Click save when you&apos; re
+              done.
             </DialogDescription>
           </DialogHeader>
           <Form {...form}>
@@ -141,18 +172,6 @@ const AddStudyPlanner = () => {
                   </FormItem>
                 )}
               />
-              {/* <TagInput
-                aria-controls={form.control}
-                name="tags"
-                placeholder="Enter a topic"
-                tags={form.}
-                setTags={(newTags) => {
-                  setTags(newTags);
-                  setValue("topics", newTags as [Tag, ...Tag[]]);
-                }}
-                activeTagIndex={activeTagIndex}
-                setActiveTagIndex={setActiveTagIndex}
-              /> */}
               <FormField
                 control={form.control}
                 name="tags"
@@ -167,7 +186,13 @@ const AddStudyPlanner = () => {
                   </FormItem>
                 )}
               />
-              <Button type="submit">Submit</Button>
+              <Button type="submit">
+                {isLoading ? (
+                  <LoaderCircle className="animate-spin" />
+                ) : (
+                  <p>Submit</p>
+                )}
+              </Button>
             </form>
           </Form>
         </DialogContent>
