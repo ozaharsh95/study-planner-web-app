@@ -86,16 +86,7 @@ const ShowStudyPlans = () => {
         </CardDescription>
       </div>
       <div className="my-8 px-4 flex flex-col gap-4">
-        {(studyPlans && studyPlans.length === 0 && (
-          <div>
-            <h1 className="text-2xl font-bold text-center">
-              No Plans are created
-            </h1>
-            <p className="text-lg font-semibold text-center">
-              press Add Project to start your journey.
-            </p>
-          </div>
-        )) ||
+        {studyPlans && 
           (studyPlans.length > 0 &&
             studyPlans.map((studyPlan) => (
               <Card key={studyPlan?.id}>

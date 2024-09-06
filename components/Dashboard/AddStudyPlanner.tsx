@@ -34,7 +34,7 @@ import { format } from "date-fns";
 import { Calendar as CalendarIcon, LoaderCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { InputTags } from "../ui/inputtags";
-import { useToast } from "@/hooks/use-toast"
+import { useToast } from "@/hooks/use-toast";
 
 
 const formSchema = z.object({

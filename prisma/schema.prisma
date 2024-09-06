@@ -34,7 +34,7 @@ model StudyPlan {
 model StudySession {
   id           Int       @id @default(autoincrement())
   date         DateTime  @default(now())
-  studyPlan    StudyPlan @relation("StudyPlanSessions", fields: [studyPlanId], references: [id])
+  studyPlan    StudyPlan @relation("StudyPlanSessions", fields: [studyPlanId], references: [id],onDelete: Cascade)
   studyPlanId  Int
   title        String
   targetTopics String[]
