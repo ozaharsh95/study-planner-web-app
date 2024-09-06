@@ -10,7 +10,6 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Button } from "../ui/button";
 import {
   Form,
@@ -47,7 +46,7 @@ const formSchema = z.object({
 const AddStudyPlanner = () => {
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  const { toast } = useToast()
+  const { toast } = useToast();
 
   // 1. Define your form.
   const form = useForm<z.infer<typeof formSchema>>({
@@ -81,7 +80,7 @@ const AddStudyPlanner = () => {
       }else{
         const data = await res.json();
         toast({
-          title: "Added Study Plan",
+          title: "Added Study Plan ✅",
           description: `"${data?.studyPlan?.title}" added successfully ...`,
         })
       }
