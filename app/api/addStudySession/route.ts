@@ -1,56 +1,58 @@
-import { PrismaClient, Prisma } from "@prisma/client";
-
+import { PrismaClient } from "@prisma/client";
 const prisma = new PrismaClient();
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { z } from "zod";
 
 const formSchema = z.object({
   title: z.string().min(10),
-  complitionDate: z.string(),
-  tags: z.string().array(),
+  targetTopics: z.string().array(),
+});
+
+const payloadSchema = z.object({
+  studyPlanId: z.number(),
+  values: formSchema,
 });
 
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    console.log(body);
-    
-    // const parsedBody = formSchema.safeParse(body);
+    const parsedBody = payloadSchema.safeParse(body);
 
-    // if (!parsedBody.success) {
-    //   return NextResponse.json(
-    //     { error: "Invalid request body", success: false },
-    //     { status: 400 }
-    //   );
-    // }
+    if (!parsedBody.success) {
+      return NextResponse.json(
+        { error: "Invalid request body", success: false },
+        { status: 400 }
+      );
+    }
 
-    // const data = parsedBody.data;
-    // console.log(data);
+    const data = parsedBody.data;
 
-    // const createStudyPlan = await prisma.studyPlan.create({
-    //   data: {
-    //     title: data.title,
-    //     expectedTime: data.complitionDate,
-    //     topicTags: data.tags,
-    //   },
-    // });
+    const newStudySession = await prisma.studySession.create({
+      data: {
+        title: data?.values?.title,
+        targetTopics: data?.values?.targetTopics,
+        studyPlan: {
+          connect: { id: data?.studyPlanId },
+        },
+      },
+    });
 
-    // if (!createStudyPlan) {
-    //   return NextResponse.json(
-    //     { error: "StudyPlan could not created", success: false },
-    //     { status: 404 }
-    //   );
-    // }
+    if (!newStudySession) {
+      return NextResponse.json(
+        { error: "StudySession could not created", success: false },
+        { status: 404 }
+      );
+    }
 
     return NextResponse.json(
-      { success: true, studyPlan: [] },
+      { success: true, studySession: newStudySession },
       { status: 201 }
     );
   } catch (err) {
     console.log(err);
-    console.error("Error in POST request:", err);
+    console.error("Error in POST request of addStudySession:", err);
     return NextResponse.json(
-      { error: "Internal Server Error", success: false },
+      { error: "Internal Server Error at addStudySession", success: false },
       { status: 500 }
     );
   }

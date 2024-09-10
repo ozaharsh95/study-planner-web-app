@@ -44,6 +44,21 @@ const ShowStudyPlans = () => {
         </CardDescription>
       </div>
       <div className="my-8 px-4 flex flex-col gap-4">
+        {studyPlans && studyPlans.length === 0 && (
+          <div
+            className="flex flex-1 items-center justify-center rounded-lg border border-dashed shadow-sm"
+            x-chunk="dashboard-02-chunk-1"
+          >
+            <div className="flex flex-col items-center gap-1 text-center">
+              <h3 className="text-2xl font-bold tracking-tight">
+                You have no Study Plans
+              </h3>
+              <p className="text-sm text-muted-foreground">
+                You can start as soon as you add a study plan.
+              </p>
+            </div>
+          </div>
+        )}
         {studyPlans &&
           studyPlans.length > 0 &&
           studyPlans.map((studyPlan) => (
@@ -54,14 +69,16 @@ const ShowStudyPlans = () => {
               <CardContent className="space-y-4">
                 <div>
                   {studyPlan.topicTags.map((tag) => (
-                    <Badge variant="outline" key={tag}>{tag}</Badge>
+                    <Badge variant="outline" key={tag}>
+                      {tag}
+                    </Badge>
                   ))}
                 </div>
                 <div>
                   <h1>Due Date : {formatDateFxn(studyPlan?.expectedTime)}</h1>
                 </div>
                 <div className="flex gap-2">
-                  <AddStudySession studyPlan={studyPlan}/>
+                  <AddStudySession studyPlan={studyPlan} />
                   <Button variant={"destructive"}>
                     <Trash2 />
                   </Button>

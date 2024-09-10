@@ -8,7 +8,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-  DialogClose
+  DialogClose,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Button } from "../ui/button";
@@ -27,19 +27,24 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { StudyPlan } from "@prisma/client";
 import { Checkbox } from "../ui/checkbox";
-import { SquarePlus } from "lucide-react";
+import { LoaderCircle, SquarePlus } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 const formSchema = z.object({
   title: z.string().min(5),
-  items: z.array(z.string()).refine((value) => value.some((item) => item), {
-    message: "You have to select at least one item.",
-  }),
+  targetTopics: z
+    .array(z.string())
+    .refine((value) => value.some((item) => item), {
+      message: "You have to select at least one item.",
+    }),
 });
 
 const AddStudySession = ({ studyPlan }: { studyPlan: StudyPlan }) => {
-  const [isOpen, setIsOpen] = useState<boolean>(true);
-  const items = studyPlan.topicTags.map((tag) => {
-    let upperStr = tag.toUpperCase(); // Call toUpperCase directly on the string
+  const [isOpen, setIsOpen] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const { toast } = useToast();
+  const targetTopics = studyPlan.topicTags.map((tag) => {
+    let upperStr = tag.toUpperCase(); 
     return { id: tag, label: upperStr };
   });
 
@@ -48,14 +53,14 @@ const AddStudySession = ({ studyPlan }: { studyPlan: StudyPlan }) => {
     resolver: zodResolver(formSchema),
     defaultValues: {
       title: "",
-      items: [],
+      targetTopics: [],
     },
   });
   // 2. Define a submit handler.
   async function onSubmit(values: z.infer<typeof formSchema>) {
     // Do something with the form values.
     // ✅ This will be type-safe and validated.
-
+    setIsLoading(true);
     const payload = {
       values,
       studyPlanId: studyPlan?.id,
@@ -68,19 +73,47 @@ const AddStudySession = ({ studyPlan }: { studyPlan: StudyPlan }) => {
         },
         body: JSON.stringify(payload),
       });
-      if (!res.ok) {
+      console.log(res.status);
+
+      if (res.status !== 201) {
         console.log("not submitted");
+        toast({
+          title: "Study Session is not created",
+          description: "",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "✅ Study Session Created Successfully .. !!",
+          description: "",
+        });
       }
-      
     } catch (err) {
       console.log(err);
+      toast({
+        title: "Study Session is not created",
+        description: "Error occured while submitting study session",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+      setIsOpen(false);
+      form.reset();
     }
   }
 
   return (
     <div>
-      <Dialog>
-        <DialogTrigger asChild>
+      <Dialog
+        open={isOpen}
+        onOpenChange={(open) => {
+          setIsOpen(open);
+          if (!open) {
+            form.reset();
+          }
+        }}
+      >
+        <DialogTrigger asChild onClick={() => setIsOpen(true)}>
           <Button className="flex gap-2 items-center">
             <SquarePlus />
             Session
@@ -90,7 +123,8 @@ const AddStudySession = ({ studyPlan }: { studyPlan: StudyPlan }) => {
           <DialogHeader>
             <DialogTitle>Add Study Session</DialogTitle>
             <DialogDescription>
-              Make changes to your profile here. Click save when you&apos;re done.
+              Make changes to your profile here. Click save when you&apos;re
+              done.
             </DialogDescription>
           </DialogHeader>
           <Form {...form}>
@@ -111,7 +145,7 @@ const AddStudySession = ({ studyPlan }: { studyPlan: StudyPlan }) => {
 
               <FormField
                 control={form.control}
-                name="items"
+                name="targetTopics"
                 render={() => (
                   <FormItem>
                     <div className="mb-4">
@@ -122,11 +156,11 @@ const AddStudySession = ({ studyPlan }: { studyPlan: StudyPlan }) => {
                         Select the topics you want to cover in this session.
                       </FormDescription>
                     </div>
-                    {items.map((item) => (
+                    {targetTopics.map((item) => (
                       <FormField
                         key={item.id}
                         control={form.control}
-                        name="items"
+                        name="targetTopics"
                         render={({ field }) => {
                           return (
                             <FormItem
@@ -163,7 +197,13 @@ const AddStudySession = ({ studyPlan }: { studyPlan: StudyPlan }) => {
                 )}
               />
 
-              <Button type="submit">Submit</Button>
+              <Button type="submit">
+                {isLoading ? (
+                  <LoaderCircle className="animate-spin" />
+                ) : (
+                  <p>Submit</p>
+                )}
+              </Button>
             </form>
           </Form>
         </DialogContent>
