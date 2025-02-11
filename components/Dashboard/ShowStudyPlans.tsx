@@ -62,6 +62,7 @@ const ShowStudyPlans = () => {
         toast({
           title: "Successfully Deleted Study Plan ✅",
         });
+        fetchStudyPlans()
       } else {
         toast({
           title: "failed to Delete Study Plan ",
